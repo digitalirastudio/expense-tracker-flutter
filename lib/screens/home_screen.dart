@@ -1,4 +1,5 @@
 import 'package:expense_tracker/screens/add_expenses_screen.dart';
+import 'package:expense_tracker/screens/profile_screen.dart';
 import 'package:expense_tracker/screens/transactions_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,32 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Expense Tracker')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('Expense Tracker'),
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            const SizedBox(height: 50),
+            const Icon(
+              Icons.account_circle,
+              size: 100,
+              color: Color(0xFF235347),
+            ),
+            const Text(
+              'Kiran',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const Spacer(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -17,9 +43,26 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [Text('Welcome back 👋'), Text('Kiran')],
+                Row(
+                  children: [
+                    Builder(
+                      builder: (context) => IconButton(
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        icon: const Icon(
+                          Icons.account_circle,
+                          size: 48,
+                          color: Color(0xFF235347),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [Text('Welcome back 👋'), Text('Kiran')],
+                    ),
+                  ],
                 ),
 
                 IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
