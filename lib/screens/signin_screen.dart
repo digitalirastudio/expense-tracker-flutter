@@ -1,10 +1,18 @@
 import 'package:expense_tracker/screens/home_screen.dart';
 import 'package:expense_tracker/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SigninScreen extends StatelessWidget {
+class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
 
+  @override
+  State<SigninScreen> createState() => _SigninScreenState();
+}
+
+class _SigninScreenState extends State<SigninScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +34,7 @@ class SigninScreen extends StatelessWidget {
             const SizedBox(height: 30),
 
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 filled: true,
@@ -39,6 +48,7 @@ class SigninScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             TextField(
+              controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -55,7 +65,12 @@ class SigninScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                    email: emailController.text.trim(),
+                    password: passwordController.text.trim(),
+                  );
+
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const HomeScreen()),

@@ -1,9 +1,19 @@
 import 'package:expense_tracker/screens/signin_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SignupScreen extends StatelessWidget {
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,6 +35,7 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 30),
 
             TextField(
+              controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Name',
                 filled: true,
@@ -38,6 +49,7 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             TextField(
+              controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 filled: true,
@@ -51,6 +63,7 @@ class SignupScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             TextField(
+              controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -66,6 +79,7 @@ class SignupScreen extends StatelessWidget {
 
             TextField(
               obscureText: true,
+              controller: confirmPasswordController,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 filled: true,
@@ -81,8 +95,12 @@ class SignupScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                    email: emailController.text.trim(),
+                    password: passwordController.text.trim(),
+                  );
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const SigninScreen(),
