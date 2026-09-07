@@ -22,214 +22,222 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Expense Tracker')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Create your account',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF235347),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                filled: true,
-                fillColor: Color(0xFFDAF1DE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Create your account',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF235347),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 30),
 
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                filled: true,
-                fillColor: Color(0xFFDAF1DE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            TextField(
-              controller: passwordController,
-              obscureText: obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                filled: true,
-                fillColor: Color(0xFFDAF1DE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscurePassword ? Icons.visibility : Icons.visibility_off,
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  filled: true,
+                  fillColor: Color(0xFFDAF1DE),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      obscurePassword = !obscurePassword;
-                    });
-                  },
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            TextField(
-              obscureText: obscureConfirmPassword,
-              controller: confirmPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                filled: true,
-                fillColor: Color(0xFFDAF1DE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscureConfirmPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Color(0xFFDAF1DE),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      obscureConfirmPassword = !obscureConfirmPassword;
-                    });
-                  },
                 ),
               ),
-            ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 16),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  if (nameController.text.trim().isEmpty) {
+              TextField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  filled: true,
+                  fillColor: Color(0xFFDAF1DE),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscurePassword = !obscurePassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              TextField(
+                obscureText: obscureConfirmPassword,
+                controller: confirmPasswordController,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  filled: true,
+                  fillColor: Color(0xFFDAF1DE),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureConfirmPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureConfirmPassword = !obscureConfirmPassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
                     setState(() {
-                      isLoading = false;
+                      isLoading = true;
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter your name.')),
-                    );
-                    return;
-                  }
-                  if (emailController.text.trim().isEmpty) {
-                    setState(() {
-                      isLoading = false;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter your email.')),
-                    );
-                    return;
-                  }
-                  final password = passwordController.text;
-
-                  if (password.length < 8 ||
-                      !password.contains(RegExp(r'[A-Z]')) ||
-                      !password.contains(RegExp(r'[a-z]')) ||
-                      !password.contains(RegExp(r'[0-9]')) ||
-                      !password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Password must be 8+ characters and include uppercase, lowercase, number, and special character.',
+                    if (nameController.text.trim().isEmpty) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter your name.'),
                         ),
+                      );
+                      return;
+                    }
+                    if (emailController.text.trim().isEmpty) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter your email.'),
+                        ),
+                      );
+                      return;
+                    }
+                    final password = passwordController.text;
+
+                    if (password.length < 8 ||
+                        !password.contains(RegExp(r'[A-Z]')) ||
+                        !password.contains(RegExp(r'[a-z]')) ||
+                        !password.contains(RegExp(r'[0-9]')) ||
+                        !password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Password must be 8+ characters and include uppercase, lowercase, number, and special character.',
+                          ),
+                        ),
+                      );
+                      setState(() {
+                        isLoading = false;
+                      });
+                      return;
+                    }
+
+                    if (passwordController.text !=
+                        confirmPasswordController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Passwords do not match.'),
+                        ),
+                      );
+                      setState(() {
+                        isLoading = false;
+                      });
+                      return;
+                    }
+                    try {
+                      await FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                            email: emailController.text.trim(),
+                            password: passwordController.text.trim(),
+                          );
+                      await FirebaseAuth.instance.currentUser
+                          ?.updateDisplayName(nameController.text.trim());
+                      await FirebaseAuth.instance.currentUser
+                          ?.sendEmailVerification();
+                    } on FirebaseAuthException catch (e) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.code == 'email-already-in-use'
+                                ? 'This email is already registered.'
+                                : e.code == 'invalid-email'
+                                ? 'Please enter a valid email address.'
+                                : 'Sign up failed. Please try again.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SigninScreen(),
                       ),
                     );
-                    setState(() {
-                      isLoading = false;
-                    });
-                    return;
-                  }
+                  },
+                  child: isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Sign Up'),
+                ),
+              ),
 
-                  if (passwordController.text !=
-                      confirmPasswordController.text) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Passwords do not match.')),
-                    );
-                    setState(() {
-                      isLoading = false;
-                    });
-                    return;
-                  }
-                  try {
-                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                      email: emailController.text.trim(),
-                      password: passwordController.text.trim(),
-                    );
-                    await FirebaseAuth.instance.currentUser?.updateDisplayName(
-                      nameController.text.trim(),
-                    );
-                    await FirebaseAuth.instance.currentUser
-                        ?.sendEmailVerification();
-                  } on FirebaseAuthException catch (e) {
-                    setState(() {
-                      isLoading = false;
-                    });
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          e.code == 'email-already-in-use'
-                              ? 'This email is already registered.'
-                              : e.code == 'invalid-email'
-                              ? 'Please enter a valid email address.'
-                              : 'Sign up failed. Please try again.',
-                        ),
+              const SizedBox(height: 15),
+
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SigninScreen(),
                       ),
                     );
-                    return;
-                  }
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SigninScreen(),
-                    ),
-                  );
-                },
-                child: isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Sign Up'),
+                  },
+                  child: const Text('Already have an account? Sign In'),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SigninScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Already have an account? Sign In'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

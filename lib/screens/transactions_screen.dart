@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import '../models/expense.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -12,37 +18,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String searchtext = '';
   String selectedFilter = 'All';
   String selectedCategory = '';
-  final transactions = [
-    {
-      'icon': Icons.restaurant,
-      'name': 'Food',
-      'details': 'Restaurant',
-      'amount': 'Rs. 500',
-      'date': DateTime.now(),
-    },
-    {
-      'icon': Icons.directions_bus,
-      'name': 'Transport',
-      'details': 'Bus',
-      'amount': 'Rs. 200',
-      'date': DateTime.now().subtract(Duration(days: 1)),
-    },
-    {
-      'icon': Icons.shopping_bag,
-      'name': 'Shopping',
-      'details': 'Clothes',
-      'amount': 'Rs. 1,200',
-      'date': DateTime.now().subtract(Duration(days: 3)),
-    },
-    {
-      'icon': Icons.receipt_long,
-      'name': 'Bills',
-      'details': 'Electricity',
-      'amount': 'Rs. 800',
-      'date': DateTime.now().subtract(Duration(days: 2)),
-    },
-  ];
-
+  final DatabaseReference _expensesRef =
+      FirebaseDatabase.instanceFor(
+            app: Firebase.app(),
+            databaseURL: 'https://expense-tracker-71410-default-rtdb.asia-southeast1.firebasedatabase.app',
+          )
+          .ref()
+          .child('users')
+          .child(FirebaseAuth.instance.currentUser!.uid)
+          .child('expenses');
   @override
   void dispose() {
     searchController.dispose();
@@ -59,27 +43,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 300,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF235347),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        searchtext = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: Color(0xFFDAF1DE),
-                      hintText: 'Search',
-                      hintStyle: TextStyle(color: Color(0xFF235347)),
-                      border: OutlineInputBorder(),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF235347),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          searchtext = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Color(0xFFDAF1DE),
+                        hintText: 'Search',
+                        hintStyle: TextStyle(color: Color(0xFF235347)),
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
                 ),
@@ -214,53 +200,48 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: transactions.where((transaction) {
-                  final matchesSearch = transaction['name']
-                      .toString()
-                      .toLowerCase()
-                      .contains(searchtext.toLowerCase());
+              child: StreamBuilder<DatabaseEvent>(
+                stream: _expensesRef.onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final transactionDate = transaction['date'] as DateTime;
-                  final today = DateTime.now();
+                  if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('Failed to load transactions.'),
+                    );
+                  }
 
-                  final matchesFilter =
-                      selectedFilter == 'All' ||
-                      (selectedFilter == 'Today' &&
-                          transactionDate.year == today.year &&
-                          transactionDate.month == today.month &&
-                          transactionDate.day == today.day) ||
-                      (selectedFilter == 'Yesterday' &&
-                          transactionDate.year ==
-                              today.subtract(Duration(days: 1)).year &&
-                          transactionDate.month ==
-                              today.subtract(Duration(days: 1)).month &&
-                          transactionDate.day ==
-                              today.subtract(Duration(days: 1)).day) ||
-                      (selectedFilter == 'This Week' &&
-                          transactionDate.isAfter(
-                            today.subtract(Duration(days: 7)),
-                          )) ||
-                      (selectedFilter == 'This Month' &&
-                          transactionDate.year == today.year &&
-                          transactionDate.month == today.month);
+                  final data = snapshot.data?.snapshot.value;
 
-                  return matchesSearch &&
-                      matchesFilter &&
-                      (selectedCategory.isEmpty ||
-                          transaction['name'] == selectedCategory);
-                }).length,
-                itemBuilder: (context, index) {
-                  final filteredTransactions = transactions.where((
-                    transaction,
-                  ) {
-                    final matchesSearch = transaction['name']
-                        .toString()
+                  if (data == null) {
+                    return const Center(child: Text('No expenses yet.'));
+                  }
+
+                  final Map<dynamic, dynamic> expensesMap =
+                      data as Map<dynamic, dynamic>;
+
+                  final expenses = expensesMap.entries.map((entry) {
+                    return Expense.fromMap(
+                      entry.key.toString(),
+                      Map<dynamic, dynamic>.from(entry.value),
+                    );
+                  }).toList();
+
+                  final filteredExpenses = expenses.where((expense) {
+                    final matchesSearch = expense.category
                         .toLowerCase()
                         .contains(searchtext.toLowerCase());
 
-                    final transactionDate = transaction['date'] as DateTime;
+                    final transactionDate = DateTime.tryParse(expense.date);
                     final today = DateTime.now();
+
+                    if (transactionDate == null) {
+                      return matchesSearch &&
+                          (selectedCategory.isEmpty ||
+                              expense.category == selectedCategory);
+                    }
 
                     final matchesFilter =
                         selectedFilter == 'All' ||
@@ -270,14 +251,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             transactionDate.day == today.day) ||
                         (selectedFilter == 'Yesterday' &&
                             transactionDate.year ==
-                                today.subtract(Duration(days: 1)).year &&
+                                today.subtract(const Duration(days: 1)).year &&
                             transactionDate.month ==
-                                today.subtract(Duration(days: 1)).month &&
+                                today.subtract(const Duration(days: 1)).month &&
                             transactionDate.day ==
-                                today.subtract(Duration(days: 1)).day) ||
+                                today.subtract(const Duration(days: 1)).day) ||
                         (selectedFilter == 'This Week' &&
                             transactionDate.isAfter(
-                              today.subtract(Duration(days: 7)),
+                              today.subtract(const Duration(days: 7)),
                             )) ||
                         (selectedFilter == 'This Month' &&
                             transactionDate.year == today.year &&
@@ -286,54 +267,42 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     return matchesSearch &&
                         matchesFilter &&
                         (selectedCategory.isEmpty ||
-                            transaction['name'] == selectedCategory);
+                            expense.category == selectedCategory);
                   }).toList();
-                  final transaction = filteredTransactions[index];
 
-                  return Card(
-                    color: const Color(0xFFDAF1DE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ListTile(
-                      leading: Icon(
-                        transaction['icon'] as IconData,
-                        color: const Color(0xFF235347),
-                      ),
-                      title: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: transaction['name'] as String,
-                              style: TextStyle(
-                                backgroundColor:
-                                    searchtext.isNotEmpty &&
-                                        (transaction['name'] as String)
-                                            .toLowerCase()
-                                            .contains(searchtext.toLowerCase())
-                                    ? Color(0xFF235347)
-                                    : Colors.transparent,
-                                color:
-                                    searchtext.isNotEmpty &&
-                                        (transaction['name'] as String)
-                                            .toLowerCase()
-                                            .contains(searchtext.toLowerCase())
-                                    ? Color(0xFFDAF1DE)
-                                    : Colors.black,
-                              ),
+                  if (filteredExpenses.isEmpty) {
+                    return const Center(child: Text('No matching expenses.'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = filteredExpenses[index];
+
+                      return Card(
+                        color: const Color(0xFFDAF1DE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.receipt_long,
+                            color: Color(0xFF235347),
+                          ),
+                          title: Text(expense.category),
+                          subtitle: Text(
+                            '${expense.date} • ${expense.time}\n${expense.note}',
+                          ),
+                          trailing: Text(
+                            'Rs. ${expense.amount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: Color(0xFF235347),
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                      subtitle: Text(transaction['details'] as String),
-                      trailing: Text(
-                        transaction['amount'] as String,
-                        style: const TextStyle(
-                          color: Color(0xFF235347),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),

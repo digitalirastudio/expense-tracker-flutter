@@ -1,13 +1,27 @@
+import 'package:expense_tracker/services/expense_services.dart';
 import 'package:flutter/material.dart';
 
-class AddExpensesScreen extends StatelessWidget {
+import '../models/expense.dart';
+
+class AddExpensesScreen extends StatefulWidget {
   const AddExpensesScreen({super.key});
 
+  @override
+  State<AddExpensesScreen> createState() => _AddExpensesScreenState();
+}
+
+class _AddExpensesScreenState extends State<AddExpensesScreen> {
+  final categoryController = TextEditingController();
+  final amountController = TextEditingController();
+  final dateController = TextEditingController();
+  final timeController = TextEditingController();
+  final noteController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Expense')),
-      body: Padding(
+      body: SingleChildScrollView(
+        child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
@@ -19,6 +33,7 @@ class AddExpensesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: TextField(
+                controller: categoryController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Color(0xFFDAF1DE),
@@ -37,6 +52,7 @@ class AddExpensesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: TextField(
+                controller: amountController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Color(0xFFDAF1DE),
@@ -59,6 +75,7 @@ class AddExpensesScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TextField(
+                      controller: dateController,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Color(0xFFDAF1DE),
@@ -80,6 +97,7 @@ class AddExpensesScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TextField(
+                      controller: timeController,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Color(0xFFDAF1DE),
@@ -109,28 +127,68 @@ class AddExpensesScreen extends StatelessWidget {
                   hintStyle: TextStyle(color: Color(0xFF235347)),
                   border: OutlineInputBorder(),
                 ),
+                controller: noteController,
                 keyboardType: TextInputType.multiline,
                 maxLines: 3,
               ),
             ),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                final amount = double.tryParse(amountController.text.trim());
+
+                if (categoryController.text.trim().isEmpty ||
+                    amount == null ||
+                    dateController.text.trim().isEmpty ||
+                    timeController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all required fields.'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  final expense = Expense(
+                    id: '',
+                    category: categoryController.text.trim(),
+                    amount: amount,
+                    date: dateController.text.trim(),
+                    time: timeController.text.trim(),
+                    note: noteController.text.trim(),
+                  );
+
+                  await ExpenseService().addExpense(expense);
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Expense added successfully.'),
+                    ),
+                  );
+
+                  Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to add expense: $e')),
+                  );
+                }
+              },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Color(0xFFDAF1DE),
                 backgroundColor: Color(0xFF235347),
               ),
               child: const Text(
                 'Add Expense',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Color(0xFFDAF1DE),
-                ),
+                style: TextStyle(fontSize: 18, color: Color(0xFFDAF1DE)),
               ),
             ),
           ],
         ),
       ),
+    ),
     );
   }
 }

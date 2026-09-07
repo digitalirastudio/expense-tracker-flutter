@@ -19,7 +19,8 @@ class _SigninScreenState extends State<SigninScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Expense Tracker')),
-      body: Padding(
+      body: SingleChildScrollView(
+        child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,6 +219,7 @@ class _SigninScreenState extends State<SigninScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }
