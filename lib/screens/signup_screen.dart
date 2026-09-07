@@ -96,10 +96,67 @@ class _SignupScreenState extends State<SignupScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                    email: emailController.text.trim(),
-                    password: passwordController.text.trim(),
-                  );
+                  if (nameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your name.')),
+                    );
+                    return;
+                  }
+                  if (emailController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your email.')),
+                    );
+                    return;
+                  }
+                  final password = passwordController.text;
+
+                  if (password.length < 8 ||
+                      !password.contains(RegExp(r'[A-Z]')) ||
+                      !password.contains(RegExp(r'[a-z]')) ||
+                      !password.contains(RegExp(r'[0-9]')) ||
+                      !password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Password must be 8+ characters and include uppercase, lowercase, number, and special character.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (passwordController.text !=
+                      confirmPasswordController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Passwords do not match.')),
+                    );
+                    return;
+                  }
+                  try {
+                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                    );
+                    await FirebaseAuth.instance.currentUser?.updateDisplayName(
+                      nameController.text.trim(),
+                    );
+                    await FirebaseAuth.instance.currentUser
+                        ?.sendEmailVerification();
+                  } on FirebaseAuthException catch (e) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.code == 'email-already-in-use'
+                              ? 'This email is already registered.'
+                              : e.code == 'invalid-email'
+                              ? 'Please enter a valid email address.'
+                              : 'Sign up failed. Please try again.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(

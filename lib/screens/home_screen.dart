@@ -1,6 +1,8 @@
 import 'package:expense_tracker/screens/add_expenses_screen.dart';
+import 'package:expense_tracker/screens/auth_gate.dart';
 import 'package:expense_tracker/screens/transactions_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -21,15 +23,22 @@ class HomeScreen extends StatelessWidget {
               size: 100,
               color: Color(0xFF235347),
             ),
-            const Text(
-              'Kiran',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              FirebaseAuth.instance.currentUser?.displayName ?? 'User',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {},
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AuthGate()),
+                );
+              },
             ),
           ],
         ),
@@ -59,7 +68,17 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [Text('Welcome back 👋'), Text('Kiran')],
+                      children: [
+                        const Text('Welcome back 👋'),
+                        Text(
+                          FirebaseAuth.instance.currentUser?.displayName ??
+                              'User',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

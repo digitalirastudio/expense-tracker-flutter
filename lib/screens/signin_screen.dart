@@ -59,22 +59,97 @@ class _SigninScreenState extends State<SigninScreen> {
                 ),
               ),
             ),
+            TextButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
 
+                if (email.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter your email first.'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await FirebaseAuth.instance.sendPasswordResetEmail(
+                    email: email,
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Password reset email sent.')),
+                  );
+                } on FirebaseAuthException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.code == 'invalid-email'
+                            ? 'Please enter a valid email address.'
+                            : 'Could not send password reset email.',
+                      ),
+                    ),
+                  );
+                }
+                // Password reset will go here
+              },
+              child: const Text('Forgot Password?'),
+            ),
             const SizedBox(height: 25),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  await FirebaseAuth.instance.signInWithEmailAndPassword(
-                    email: emailController.text.trim(),
-                    password: passwordController.text.trim(),
-                  );
+                  if (emailController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter your email.')),
+                    );
+                    return;
+                  }
 
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
+                  if (passwordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter your password.'),
+                      ),
+                    );
+                    return;
+                  }
+                  try {
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
+                    );
+                    if (!FirebaseAuth.instance.currentUser!.emailVerified) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please verify your email before signing in.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.code == 'invalid-credential'
+                              ? 'Incorrect email or password.'
+                              : e.code == 'invalid-email'
+                              ? 'Please enter a valid email address.'
+                              : 'Sign in failed. Please try again.',
+                        ),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Sign In'),
               ),
@@ -83,16 +158,35 @@ class _SigninScreenState extends State<SigninScreen> {
             const SizedBox(height: 15),
 
             Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignupScreen(),
-                    ),
-                  );
-                },
-                child: const Text("Don't have an account? Sign Up"),
+              child: Column(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignupScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text("Don't have an account? Sign Up"),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.currentUser
+                          ?.sendEmailVerification();
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Verification email sent again.'),
+                        ),
+                      );
+                    },
+                    child: const Text('Resend Verification Email'),
+                  ),
+                ],
               ),
             ),
           ],
