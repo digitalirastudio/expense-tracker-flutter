@@ -1,11 +1,48 @@
+import 'package:expense_tracker/models/expense.dart';
 import 'package:expense_tracker/screens/add_expenses_screen.dart';
 import 'package:expense_tracker/screens/auth_gate.dart';
 import 'package:expense_tracker/screens/transactions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final DatabaseReference _expensesRef =
+      FirebaseDatabase.instanceFor(
+            app: Firebase.app(),
+            databaseURL: 'https://expense-tracker-71410-default-rtdb.asia-southeast1.firebasedatabase.app',
+          )
+          .ref()
+          .child('users')
+          .child(FirebaseAuth.instance.currentUser!.uid)
+          .child('expenses');
+  Stream<List<Expense>> _expensesStream() {
+    return _expensesRef.onValue.map((event) {
+      final data = event.snapshot.value;
+
+      if (data == null) {
+        return <Expense>[];
+      }
+
+      final expensesMap = Map<dynamic, dynamic>.from(data as Map);
+
+      return expensesMap.entries.map((entry) {
+        return Expense.fromMap(
+          entry.key.toString(),
+          Map<dynamic, dynamic>.from(entry.value),
+        );
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,37 +126,48 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            Container(
-              padding: const EdgeInsets.all(16),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF235347),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Total Balance',
-                    style: TextStyle(color: Color(0xFFDAF1DE)),
+            StreamBuilder<List<Expense>>(
+              stream: _expensesStream(),
+              builder: (context, snapshot) {
+                final expenses = snapshot.data ?? [];
+
+                final totalExpenses = expenses.fold<double>(
+                  0,
+                  (sum, expense) => sum + expense.amount,
+                );
+
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF235347),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    '\$ 1,200.00',
-                    style: TextStyle(
-                      color: Color(0xFFDAF1DE),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Total Expenses',
+                        style: TextStyle(color: Color(0xFFDAF1DE)),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rs. ${totalExpenses.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          color: Color(0xFFDAF1DE),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${expenses.length} transaction${expenses.length == 1 ? '' : 's'}',
+                        style: const TextStyle(color: Color(0xFFDAF1DE)),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Income: \$ 2,000.00 | Expenses: \$ 800.00',
-                    style: TextStyle(color: Color(0xFFDAF1DE)),
-                  ),
-                  SizedBox(height: 8),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 24),
             Row(
@@ -146,86 +194,56 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 8),
-            Column(
-              children: [
-                Padding(padding: const EdgeInsets.symmetric(vertical: 8)),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  tileColor: const Color(0xFF235347),
-                  leading: const Icon(
-                    Icons.food_bank_outlined,
-                    color: Color(0xFFDAF1DE),
-                  ),
-                  title: const Text(
-                    'Food',
-                    style: TextStyle(color: Color(0xFFDAF1DE)),
-                  ),
-                  subtitle: const Text(
-                    'Today, 10:00 AM',
-                    style: TextStyle(color: Color(0xFFDAF1DE)),
-                  ),
-                  trailing: const Text(
-                    '- \$50.00',
-                    style: TextStyle(color: Color(0xFFDAF1DE)),
-                  ),
-                  onTap: () {},
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    tileColor: const Color(0xFF235347),
-                    leading: const Icon(
-                      Icons.directions_car,
-                      color: Color(0xFFDAF1DE),
-                    ),
-                    title: const Text(
-                      'Transport',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    subtitle: const Text(
-                      'Yesterday, 7:30 PM',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    trailing: const Text(
-                      '- \$30.00',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    onTap: () {},
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    tileColor: const Color(0xFF235347),
-                    leading: const Icon(
-                      Icons.shopping_bag_outlined,
-                      color: Color(0xFFDAF1DE),
-                    ),
-                    title: const Text(
-                      'Shopping',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    subtitle: const Text(
-                      'Yesterday, 5:00 PM',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    trailing: const Text(
-                      '+ \$2,000.00',
-                      style: TextStyle(color: Color(0xFFDAF1DE)),
-                    ),
-                    onTap: () {},
-                  ),
-                ),
-              ],
+            StreamBuilder<List<Expense>>(
+              stream: _expensesStream(),
+              builder: (context, snapshot) {
+                final expenses = snapshot.data ?? [];
+
+                if (expenses.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text('No expenses yet.'),
+                  );
+                }
+
+                final recentExpenses = List<Expense>.from(expenses)
+                  ..sort((a, b) => b.id.compareTo(a.id));
+
+                final displayedExpenses = recentExpenses.take(3).toList();
+
+                return Column(
+                  children: displayedExpenses.map((expense) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        tileColor: const Color(0xFF235347),
+                        leading: const Icon(
+                          Icons.receipt_long,
+                          color: Color(0xFFDAF1DE),
+                        ),
+                        title: Text(
+                          expense.category,
+                          style: const TextStyle(color: Color(0xFFDAF1DE)),
+                        ),
+                        subtitle: Text(
+                          '${expense.date} • ${expense.time}',
+                          style: const TextStyle(color: Color(0xFFDAF1DE)),
+                        ),
+                        trailing: Text(
+                          'Rs. ${expense.amount.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Color(0xFFDAF1DE),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),
