@@ -1,5 +1,6 @@
+import 'package:expense_tracker/screens/add_expenses_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,6 +32,24 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _deleteExpense(String expenseId) async {
+    try {
+      await _expensesRef.child(expenseId).remove();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Expense deleted successfully.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete expense: $e')));
+    }
   }
 
   @override
@@ -293,12 +312,54 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           subtitle: Text(
                             '${expense.date} • ${expense.time}\n${expense.note}',
                           ),
-                          trailing: Text(
-                            'Rs. ${expense.amount.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              color: Color(0xFF235347),
-                              fontWeight: FontWeight.bold,
-                            ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Rs. ${expense.amount.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  color: Color(0xFF235347),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              PopupMenuButton<String>(
+                                onSelected: (value) async {
+                                  if (value == 'edit') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddExpensesScreen(expense: expense),
+                                      ),
+                                    );
+                                  } else if (value == 'delete') {
+                                    await _deleteExpense(expense.id);
+                                  }
+                                },
+                                itemBuilder: (context) => const [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete),
+                                        SizedBox(width: 8),
+                                        Text('Delete'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       );

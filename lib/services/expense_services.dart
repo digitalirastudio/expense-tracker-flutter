@@ -24,4 +24,19 @@ class ExpenseService {
 
     await expenseRef.set(expense.toMap());
   }
+
+  Future<void> updateExpense(Expense expense) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw Exception('User is not signed in.');
+    }
+
+    await _database
+        .child('users')
+        .child(user.uid)
+        .child('expenses')
+        .child(expense.id)
+        .update(expense.toMap());
+  }
 }

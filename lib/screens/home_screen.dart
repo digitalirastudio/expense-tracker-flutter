@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+import 'package:expense_tracker/screens/profile_screen.dart';
 import 'package:expense_tracker/models/expense.dart';
 import 'package:expense_tracker/screens/add_expenses_screen.dart';
 import 'package:expense_tracker/screens/auth_gate.dart';
@@ -6,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,17 +55,64 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: Drawer(
         child: Column(
           children: [
-            const SizedBox(height: 50),
-            const Icon(
-              Icons.account_circle,
-              size: 100,
-              color: Color(0xFF235347),
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: Color(0xFF235347)),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Color(0xFFDAF1DE),
+                child: Icon(Icons.person, size: 50, color: Color(0xFF235347)),
+              ),
+              accountName: Text(
+                FirebaseAuth.instance.currentUser?.displayName ?? 'User',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              accountEmail: Text(
+                FirebaseAuth.instance.currentUser?.email ?? '',
+              ),
             ),
-            Text(
-              FirebaseAuth.instance.currentUser?.displayName ?? 'User',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
             ),
+
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('Transactions'),
+              onTap: () {
+                Navigator.pop(context);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TransactionsScreen(),
+                  ),
+                );
+              },
+            ),
+
             const Spacer(),
+
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
