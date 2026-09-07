@@ -13,6 +13,7 @@ class SigninScreen extends StatefulWidget {
 class _SigninScreenState extends State<SigninScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,10 +102,16 @@ class _SigninScreenState extends State<SigninScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
                   if (emailController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please enter your email.')),
                     );
+                    setState(() {
+                      isLoading = false;
+                    });
                     return;
                   }
 
@@ -114,6 +121,9 @@ class _SigninScreenState extends State<SigninScreen> {
                         content: Text('Please enter your password.'),
                       ),
                     );
+                    setState(() {
+                      isLoading = false;
+                    });
                     return;
                   }
                   try {
@@ -138,6 +148,9 @@ class _SigninScreenState extends State<SigninScreen> {
                       ),
                     );
                   } on FirebaseAuthException catch (e) {
+                    setState(() {
+                      isLoading = false;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -151,7 +164,9 @@ class _SigninScreenState extends State<SigninScreen> {
                     );
                   }
                 },
-                child: const Text('Sign In'),
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Sign In'),
               ),
             ),
 
