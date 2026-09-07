@@ -14,6 +14,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,13 +97,22 @@ class _SignupScreenState extends State<SignupScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
                   if (nameController.text.trim().isEmpty) {
+                    setState(() {
+                      isLoading = false;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please enter your name.')),
                     );
                     return;
                   }
                   if (emailController.text.trim().isEmpty) {
+                    setState(() {
+                      isLoading = false;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please enter your email.')),
                     );
@@ -122,6 +132,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     );
+                    setState(() {
+                      isLoading = false;
+                    });
                     return;
                   }
 
@@ -130,6 +143,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Passwords do not match.')),
                     );
+                    setState(() {
+                      isLoading = false;
+                    });
                     return;
                   }
                   try {
@@ -143,6 +159,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     await FirebaseAuth.instance.currentUser
                         ?.sendEmailVerification();
                   } on FirebaseAuthException catch (e) {
+                    setState(() {
+                      isLoading = false;
+                    });
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -164,7 +183,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   );
                 },
-                child: const Text('Sign Up'),
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Sign Up'),
               ),
             ),
 
