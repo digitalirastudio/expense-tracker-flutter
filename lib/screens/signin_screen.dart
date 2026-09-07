@@ -14,6 +14,7 @@ class _SigninScreenState extends State<SigninScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
+  bool obscurePassword = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,11 +51,21 @@ class _SigninScreenState extends State<SigninScreen> {
 
             TextField(
               controller: passwordController,
-              obscureText: true,
+              obscureText: obscurePassword,
               decoration: InputDecoration(
                 labelText: 'Password',
                 filled: true,
                 fillColor: Color(0xFFDAF1DE),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      obscurePassword = !obscurePassword;
+                    });
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

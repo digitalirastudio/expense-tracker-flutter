@@ -1,3 +1,4 @@
+import 'package:expense_tracker/screens/signin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,8 @@ class AuthGate extends StatelessWidget {
           return const SigninScreen();
         }
 
-        
+        return const SignupScreen();
+      },
     );
   }
 }

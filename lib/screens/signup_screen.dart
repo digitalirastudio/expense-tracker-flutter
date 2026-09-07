@@ -14,7 +14,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+
   bool isLoading = false;
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
             TextField(
               controller: passwordController,
-              obscureText: true,
+              obscureText: obscurePassword,
               decoration: InputDecoration(
                 labelText: 'Password',
                 filled: true,
@@ -73,13 +76,23 @@ class _SignupScreenState extends State<SignupScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      obscurePassword = !obscurePassword;
+                    });
+                  },
+                ),
               ),
             ),
 
             const SizedBox(height: 16),
 
             TextField(
-              obscureText: true,
+              obscureText: obscureConfirmPassword,
               controller: confirmPasswordController,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
@@ -87,6 +100,18 @@ class _SignupScreenState extends State<SignupScreen> {
                 fillColor: Color(0xFFDAF1DE),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscureConfirmPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      obscureConfirmPassword = !obscureConfirmPassword;
+                    });
+                  },
                 ),
               ),
             ),
