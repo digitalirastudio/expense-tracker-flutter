@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _avatar = '👤';
   final DatabaseReference _expensesRef =
       FirebaseDatabase.instanceFor(
             app: Firebase.app(),
@@ -45,6 +46,36 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Stream<String> _avatarStream() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return FirebaseDatabase.instanceFor(
+          app: Firebase.app(),
+          databaseURL: 'https://expense-tracker-71410-default-rtdb.asia-southeast1.firebasedatabase.app',
+        )
+        .ref()
+        .child('users')
+        .child(user!.uid)
+        .child('profile')
+        .child('avatar')
+        .onValue
+        .map((event) {
+          final avatar = event.snapshot.value?.toString() ?? '👤';
+
+          if (mounted && _avatar != avatar) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _avatar = avatar;
+                });
+              }
+            });
+          }
+
+          return avatar;
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,9 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(color: Color(0xFF235347)),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Color(0xFFDAF1DE),
-                child: Icon(Icons.person, size: 50, color: Color(0xFF235347)),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: const Color(0xFFDAF1DE),
+                child: Text(_avatar, style: const TextStyle(fontSize: 32)),
               ),
               accountName: Text(
                 FirebaseAuth.instance.currentUser?.displayName ?? 'User',
@@ -131,44 +162,45 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Builder(
-                      builder: (context) => IconButton(
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                        icon: const Icon(
-                          Icons.account_circle,
-                          size: 48,
-                          color: Color(0xFF235347),
+                StreamBuilder<String>(
+                  stream: _avatarStream(),
+                  builder: (context, snapshot) {
+                    final avatar = snapshot.data ?? _avatar;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: const Color(0xFFDAF1DE),
+                        child: Text(
+                          avatar,
+                          style: const TextStyle(fontSize: 30),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Welcome back 👋'),
-                        Text(
-                          FirebaseAuth.instance.currentUser?.displayName ??
-                              'User',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
+                const SizedBox(width: 10),
 
-                IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Welcome Back'),
+                      Text(
+                        FirebaseAuth.instance.currentUser?.displayName ??
+                            'User',
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
 

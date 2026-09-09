@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:expense_tracker/screens/auth_gate.dart';
+import 'package:expense_tracker/screens/splash_screen.dart';
 
 import 'firebase_options.dart';
 
@@ -19,7 +19,7 @@ class ExpenseTrackerApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Expense Tracker',
-      home: const AuthGate(),
+      home: const SplashScreen(),
     );
   }
 }
