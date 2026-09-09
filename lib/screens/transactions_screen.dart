@@ -259,7 +259,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (transactionDate == null) {
                       return matchesSearch &&
                           (selectedCategory.isEmpty ||
-                              expense.category == selectedCategory);
+                              expense.category.toLowerCase() ==
+                                  selectedCategory.toLowerCase());
                     }
 
                     final matchesFilter =
@@ -286,7 +287,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     return matchesSearch &&
                         matchesFilter &&
                         (selectedCategory.isEmpty ||
-                            expense.category == selectedCategory);
+                            expense.category.toLowerCase() ==
+                                selectedCategory.toLowerCase());
                   }).toList();
 
                   if (filteredExpenses.isEmpty) {
