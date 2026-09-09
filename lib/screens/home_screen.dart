@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
 
                   return Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: const Color(0xFFDAF1DE),
@@ -316,27 +316,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Column(
                       children: [
+                        const Icon(
+                          Icons.calendar_month_outlined,
+                          color: Color(0xFF235347),
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
                         const Text(
                           'This Month',
                           style: TextStyle(
                             color: Color(0xFF235347),
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Text(
                           'Rs. ${monthlyTotal.toStringAsFixed(0)}',
                           style: const TextStyle(
                             color: Color(0xFF235347),
-                            fontSize: 24,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           '${monthlyExpenses.length} transaction${monthlyExpenses.length == 1 ? '' : 's'}',
-                          style: const TextStyle(color: Color(0xFF235347)),
+                          style: const TextStyle(
+                            color: Color(0xFF235347),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -353,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: const Color(0xFF235347),
                       borderRadius: BorderRadius.circular(20),
@@ -361,15 +370,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Category Breakdown',
-                          style: TextStyle(
-                            color: Color(0xFFDAF1DE),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.pie_chart_outline,
+                              color: Color(0xFFDAF1DE),
+                              size: 28,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Category Breakdown',
+                              style: TextStyle(
+                                color: Color(0xFFDAF1DE),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
 
                         if (categoryTotals.isEmpty)
                           const Text(
@@ -379,15 +398,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         else
                           ...categoryTotals.entries.map(
                             (entry) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    entry.key,
-                                    style: const TextStyle(
-                                      color: Color(0xFFDAF1DE),
+                                  SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      entry.key,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0xFFDAF1DE),
+                                      ),
                                     ),
                                   ),
                                   Expanded(
@@ -395,14 +416,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                       ),
-                                      child: LinearProgressIndicator(
-                                        value:
-                                            entry.value /
-                                            categoryTotals.values.reduce(
-                                              (a, b) => a > b ? a : b,
-                                            ),
-                                        backgroundColor: const Color(
-                                          0xFFDAF1DE,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: LinearProgressIndicator(
+                                          minHeight: 8,
+                                          value:
+                                              entry.value /
+                                              categoryTotals.values.reduce(
+                                                (a, b) => a > b ? a : b,
+                                              ),
+                                          backgroundColor: const Color(
+                                            0xFFDAF1DE,
+                                          ),
                                         ),
                                       ),
                                     ),
