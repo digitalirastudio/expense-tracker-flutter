@@ -93,6 +93,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                       ),
                       child: TextField(
                         controller: dateController,
+                        readOnly: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Color(0xFFDAF1DE),
@@ -100,7 +101,19 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                           hintStyle: TextStyle(color: Color(0xFF235347)),
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.datetime,
+                        onTap: () async {
+                          final pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                          );
+
+                          if (pickedDate != null) {
+                            dateController.text =
+                                '${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}';
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -115,6 +128,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                       ),
                       child: TextField(
                         controller: timeController,
+                        readOnly: true,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Color(0xFFDAF1DE),
@@ -122,7 +136,16 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                           hintStyle: TextStyle(color: Color(0xFF235347)),
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.datetime,
+                        onTap: () async {
+                          final pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+
+                          if (pickedTime != null) {
+                            timeController.text = pickedTime.format(context);
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -192,6 +215,8 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
 
                     Navigator.pop(context);
                   } catch (e) {
+                    if (!context.mounted) return;
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Failed to add expense: $e')),
                     );
