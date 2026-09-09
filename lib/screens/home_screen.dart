@@ -17,7 +17,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Avatar variable to hold the current avatar
   String _avatar = '👤';
+  // Database reference for expenses
   final DatabaseReference _expensesRef =
       FirebaseDatabase.instanceFor(
             app: Firebase.app(),
@@ -27,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .child('users')
           .child(FirebaseAuth.instance.currentUser!.uid)
           .child('expenses');
+  // Function to get a stream of expenses from the database
   Stream<List<Expense>> _expensesStream() {
     return _expensesRef.onValue.map((event) {
       final data = event.snapshot.value;
@@ -46,6 +49,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Map<String, double> _getCategoryTotals(List<Expense> expenses) {
+    final categoryTotals = <String, double>{};
+
+    for (final expense in expenses) {
+      categoryTotals[expense.category] =
+          (categoryTotals[expense.category] ?? 0) + expense.amount;
+    }
+
+    return categoryTotals;
+  }
+
+  //avtar stream to update the avatar in real-time
   Stream<String> _avatarStream() {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -83,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         title: const Text('Expense Tracker'),
       ),
+      // Drawer for navigation and user account information
       drawer: Drawer(
         child: Column(
           children: [
@@ -103,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 FirebaseAuth.instance.currentUser?.email ?? '',
               ),
             ),
-
+            // Drawer items for navigation
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
@@ -159,173 +175,337 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                StreamBuilder<String>(
-                  stream: _avatarStream(),
-                  builder: (context, snapshot) {
-                    final avatar = snapshot.data ?? _avatar;
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // StreamBuilder to listen for avatar changes in real-time
+                  StreamBuilder<String>(
+                    stream: _avatarStream(),
+                    builder: (context, snapshot) {
+                      final avatar = snapshot.data ?? _avatar;
 
-                    return GestureDetector(
-                      onTap: () {
-                        Scaffold.of(context).openDrawer();
-                      },
-                      child: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: const Color(0xFFDAF1DE),
-                        child: Text(
-                          avatar,
-                          style: const TextStyle(fontSize: 30),
+                      return GestureDetector(
+                        onTap: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: CircleAvatar(
+                          radius: 24,
+                          backgroundColor: const Color(0xFFDAF1DE),
+                          child: Text(
+                            avatar,
+                            style: const TextStyle(fontSize: 30),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 10),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Welcome Back'),
-                      Text(
-                        FirebaseAuth.instance.currentUser?.displayName ??
-                            'User',
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 10),
 
-            const SizedBox(height: 24),
-
-            StreamBuilder<List<Expense>>(
-              stream: _expensesStream(),
-              builder: (context, snapshot) {
-                final expenses = snapshot.data ?? [];
-
-                final totalExpenses = expenses.fold<double>(
-                  0,
-                  (sum, expense) => sum + expense.amount,
-                );
-
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF235347),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Total Expenses',
-                        style: TextStyle(color: Color(0xFFDAF1DE)),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Rs. ${totalExpenses.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: Color(0xFFDAF1DE),
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Welcome Back'),
+                        Text(
+                          FirebaseAuth.instance.currentUser?.displayName ??
+                              'User',
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${expenses.length} transaction${expenses.length == 1 ? '' : 's'}',
-                        style: const TextStyle(color: Color(0xFFDAF1DE)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Transactions',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TransactionsScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            StreamBuilder<List<Expense>>(
-              stream: _expensesStream(),
-              builder: (context, snapshot) {
-                final expenses = snapshot.data ?? [];
+                ],
+              ),
 
-                if (expenses.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text('No expenses yet.'),
+              const SizedBox(height: 24),
+
+              StreamBuilder<List<Expense>>(
+                stream: _expensesStream(),
+                builder: (context, snapshot) {
+                  final expenses = snapshot.data ?? [];
+
+                  final totalExpenses = expenses.fold<double>(
+                    0,
+                    (sum, expense) => sum + expense.amount,
                   );
-                }
 
-                final recentExpenses = List<Expense>.from(expenses)
-                  ..sort((a, b) => b.id.compareTo(a.id));
-
-                final displayedExpenses = recentExpenses.take(3).toList();
-
-                return Column(
-                  children: displayedExpenses.map((expense) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        tileColor: const Color(0xFF235347),
-                        leading: const Icon(
-                          Icons.receipt_long,
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF235347),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.account_balance_wallet_outlined,
                           color: Color(0xFFDAF1DE),
+                          size: 32,
                         ),
-                        title: Text(
-                          expense.category,
-                          style: const TextStyle(color: Color(0xFFDAF1DE)),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Total Expenses',
+                          style: TextStyle(
+                            color: Color(0xFFDAF1DE),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        subtitle: Text(
-                          '${expense.date} • ${expense.time}',
-                          style: const TextStyle(color: Color(0xFFDAF1DE)),
-                        ),
-                        trailing: Text(
-                          'Rs. ${expense.amount.toStringAsFixed(0)}',
+                        const SizedBox(height: 6),
+                        Text(
+                          'Rs. ${totalExpenses.toStringAsFixed(0)}',
                           style: const TextStyle(
                             color: Color(0xFFDAF1DE),
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${expenses.length} transaction${expenses.length == 1 ? '' : 's'}',
+                          style: const TextStyle(
+                            color: Color(0xFFDAF1DE),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              StreamBuilder<List<Expense>>(
+                stream: _expensesStream(),
+                builder: (context, snapshot) {
+                  final expenses = snapshot.data ?? [];
+
+                  final now = DateTime.now();
+
+                  final monthlyExpenses = expenses.where((expense) {
+                    final parts = expense.date.split('-');
+
+                    if (parts.length != 3) return false;
+
+                    final year = int.tryParse(parts[0]);
+                    final month = int.tryParse(parts[1]);
+
+                    if (year == null || month == null) return false;
+
+                    return year == now.year && month == now.month;
+                  }).toList();
+
+                  final monthlyTotal = monthlyExpenses.fold<double>(
+                    0,
+                    (sum, expense) => sum + expense.amount,
+                  );
+
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDAF1DE),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'This Month',
+                          style: TextStyle(
+                            color: Color(0xFF235347),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Rs. ${monthlyTotal.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Color(0xFF235347),
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${monthlyExpenses.length} transaction${monthlyExpenses.length == 1 ? '' : 's'}',
+                          style: const TextStyle(color: Color(0xFF235347)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
+              StreamBuilder<List<Expense>>(
+                stream: _expensesStream(),
+                builder: (context, snapshot) {
+                  final expenses = snapshot.data ?? [];
+                  final categoryTotals = _getCategoryTotals(expenses);
+
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF235347),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Category Breakdown',
+                          style: TextStyle(
+                            color: Color(0xFFDAF1DE),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (categoryTotals.isEmpty)
+                          const Text(
+                            'No expenses yet.',
+                            style: TextStyle(color: Color(0xFFDAF1DE)),
+                          )
+                        else
+                          ...categoryTotals.entries.map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      color: Color(0xFFDAF1DE),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: LinearProgressIndicator(
+                                        value:
+                                            entry.value /
+                                            categoryTotals.values.reduce(
+                                              (a, b) => a > b ? a : b,
+                                            ),
+                                        backgroundColor: const Color(
+                                          0xFFDAF1DE,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Rs. ${entry.value.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                      color: Color(0xFFDAF1DE),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Transactions',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionsScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'View All',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              StreamBuilder<List<Expense>>(
+                stream: _expensesStream(),
+                builder: (context, snapshot) {
+                  final expenses = snapshot.data ?? [];
+
+                  if (expenses.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text('No expenses yet.'),
                     );
-                  }).toList(),
-                );
-              },
-            ),
-          ],
+                  }
+
+                  final recentExpenses = List<Expense>.from(expenses)
+                    ..sort((a, b) => b.id.compareTo(a.id));
+
+                  final displayedExpenses = recentExpenses.take(3).toList();
+
+                  return Column(
+                    children: displayedExpenses.map((expense) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          tileColor: const Color(0xFF235347),
+                          leading: const Icon(
+                            Icons.receipt_long,
+                            color: Color(0xFFDAF1DE),
+                          ),
+                          title: Text(
+                            expense.category,
+                            style: const TextStyle(color: Color(0xFFDAF1DE)),
+                          ),
+                          subtitle: Text(
+                            '${expense.date} • ${expense.time}',
+                            style: const TextStyle(color: Color(0xFFDAF1DE)),
+                          ),
+                          trailing: Text(
+                            'Rs. ${expense.amount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              color: Color(0xFFDAF1DE),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
